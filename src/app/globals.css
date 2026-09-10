@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+/* ============================================================
+   MediaDrop design tokens (from mediadrop-ui-prd.md)
+   Light = warm paper + blue sky hero field
+   Dark  = night sky hero field
+   ============================================================ */
+
+:root {
+  --bg: #fafaf9;
+  --tint: #f2f0ea;
+  --card: #ffffff;
+  --border: #e7e5e0;
+  --ink: #1b1b19;
+  --ink-2: #6e6e68;
+  --ink-3: #9a9a93;
+  --accent: #177b4b;
+  --danger: #b42318;
+  --sky-1: #8fc1ea;
+  --sky-2: #e1eef8;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 24px 48px rgba(30, 60, 90, 0.22);
+  --btn-ink: #1b1b19;
+  --btn-text: #fafaf9;
+}
+
+.dark {
+  --bg: #0c0c0b;
+  --tint: #101010;
+  --card: #151514;
+  --border: #272723;
+  --ink: #ecece8;
+  --ink-2: #909089;
+  --ink-3: #62625d;
+  --accent: #3ecf8e;
+  --danger: #f97066;
+  --sky-1: #101b33;
+  --sky-2: #1d2f4e;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.55);
+  --btn-ink: #ecece8;
+  --btn-text: #0c0c0b;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-tint: var(--tint);
+  --color-card: var(--card);
+  --color-hairline: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-sky-1: var(--sky-1);
+  --color-sky-2: var(--sky-2);
+  --color-btn-ink: var(--btn-ink);
+  --color-btn-text: var(--btn-text);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* base */
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* small type scale helpers (Inter, tabular nums where counters tick) */
+.tnums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* sky field with soft clouds */
+.sky-field {
+  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+  position: relative;
+  transition: background 200ms ease;
+}
+.sky-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 130px at 18% 32%, rgba(255, 255, 255, 0.5), transparent 70%),
+    radial-gradient(520px 150px at 85% 18%, rgba(255, 255, 255, 0.35), transparent 70%),
+    radial-gradient(360px 100px at 62% 60%, rgba(255, 255, 255, 0.25), transparent 70%);
+}
+.dark .sky-field::before {
+  background:
+    radial-gradient(420px 130px at 18% 32%, rgba(255, 255, 255, 0.06), transparent 70%),
+    radial-gradient(520px 150px at 85% 18%, rgba(255, 255, 255, 0.045), transparent 70%),
+    radial-gradient(360px 100px at 62% 60%, rgba(255, 255, 255, 0.03), transparent 70%);
+}
+
+/* text colors tuned for sitting directly on the sky field */
+.sky-ink {
+  color: rgba(27, 27, 25, 0.92);
+}
+.dark .sky-ink {
+  color: rgba(236, 236, 232, 0.92);
+}
+.sky-ink-2 {
+  color: rgba(27, 27, 25, 0.72);
+}
+.dark .sky-ink-2 {
+  color: rgba(236, 236, 232, 0.72);
+}
+.sky-ink-3 {
+  color: rgba(27, 27, 25, 0.6);
+}
+.dark .sky-ink-3 {
+  color: rgba(236, 236, 232, 0.6);
+}
+
+.card-shadow {
+  box-shadow: var(--card-shadow);
+}
+
+/* focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* skeleton shimmer (the one allowed gradient — functional) */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--tint);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--card) 50%, transparent 70%);
+  opacity: 0.08;
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .skeleton::after {
+    animation: none;
+    opacity: 0.05;
+  }
+}
