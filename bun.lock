@@ -12,6 +12,7 @@
         "react": "19.2.8",
         "react-dom": "19.2.8",
         "tailwind-merge": "^3.6.0",
+        "ytdlp-nodejs": "^3.4.5",
       },
       "devDependencies": {
         "@tailwindcss/postcss": "^4",
@@ -873,6 +874,8 @@
     "yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
 
     "yocto-queue": ["yocto-queue@0.1.0", "", {}, "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="],
+
+    "ytdlp-nodejs": ["ytdlp-nodejs@3.4.5", "", { "bin": { "ytdlp": "dist/cli/index.js" } }, "sha512-KPXnW2xa553mDbrCdXPnsZTPIL7b3GJcQLskpePIoNm7uqquHjJj7ha+1r8x3dwyTQ4TATvsP6K0RDnumQr0zQ=="],
 
     "zod": ["zod@4.6.1", "", {}, "sha512-341aRWQsve0rvronKNTqZpjmzdbUDlFuzHaI/XLg/Ej82qffDJRRfBTCuv7+9q/rMjB6LSLyEBnW4InJeMtt/Q=="],
 

@@ -9,15 +9,21 @@ export default function Home() {
   const { theme, toggle } = useTheme();
 
   return (
-    <main className="min-h-dvh">
+    <main className="min-h-dvh ">
       {/* ---------- nav + hero sit directly on the sky field ---------- */}
-      <div className="sky-field px-5 pb-24 md:pb-28">
-        <nav className="mx-auto flex h-14 max-w-[640px] items-center justify-between">
+      <div
+        className={
+          "sky-field px-5 pb-24 md:pb-70 " +
+            "bg-[url('/BACKGROUND.png')] bg-no-repeat bg-cover " +
+          "bg-[position:center_50%]"
+        }
+      >
+        <nav className="mx-auto flex h-14 max-w-[640px] items-center justify-between ">
           <motion.div
             initial={{ opacity: 0, ...(reduced ? {} : { y: 12 }) }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-1.75 text-sm font-semibold tracking-tight sky-ink"
+            className="flex items-center gap-1.75 text-sm font-semibold tracking-tight "
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
@@ -36,9 +42,7 @@ export default function Home() {
             transition={{ duration: 0.48 }}
             className="flex items-center gap-3.5"
           >
-            <a href="#" className="text-xs sky-ink-3 transition-colors hover:opacity-80">
-              GitHub
-            </a>
+            
             <button
               onClick={toggle}
               aria-label="Toggle theme"
@@ -59,14 +63,7 @@ export default function Home() {
         </nav>
 
         <div className="mx-auto max-w-[640px] px-2 pt-11 pb-2 text-center">
-          <motion.p
-            initial={{ opacity: 0, ...(reduced ? {} : { y: 12 }) }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[11px] font-semibold uppercase tracking-[0.08em] sky-ink-3"
-          >
-            1000+ sites · video &amp; audio
-          </motion.p>
+          
           <motion.h1
             initial={{ opacity: 0, ...(reduced ? {} : { y: 12 }) }}
             animate={{ opacity: 1, y: 0 }}
@@ -93,7 +90,7 @@ export default function Home() {
       </div>
 
       {/* ---------- feature strip ---------- */}
-      <div className="mx-auto max-w-[640px] px-5 pb-10 pt-14">
+      <div className="mx-auto max-w-[640px] px-5  pt-14">
         <div className="grid grid-cols-2 gap-7 gap-y-7 md:grid-cols-4">
           {[
             ["No ads, ever", "The page has nothing to sell you."],
@@ -124,7 +121,7 @@ export default function Home() {
         </motion.p>
       </div>
 
-      <footer className="px-5 pb-[calc(28px+env(safe-area-inset-bottom))] pt-7 text-center text-[11px] text-ink-3">
+      <footer className="px-5 pb-[calc(28px+env(safe-area-inset-bottom))] text-center text-[11px] text-ink-3">
         mediadrop — a personal-use tool. Please respect creators and platform terms. Nothing is stored.
       </footer>
     </main>

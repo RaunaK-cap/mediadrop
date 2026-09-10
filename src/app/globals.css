@@ -75,7 +75,7 @@ body {
 
 /* sky field with soft clouds */
 .sky-field {
-  background: linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 100%);
+  background-color: transparent;
   position: relative;
   transition: background 200ms ease;
 }
@@ -94,6 +94,33 @@ body {
     radial-gradient(420px 130px at 18% 32%, rgba(255, 255, 255, 0.06), transparent 70%),
     radial-gradient(520px 150px at 85% 18%, rgba(255, 255, 255, 0.045), transparent 70%),
     radial-gradient(360px 100px at 62% 60%, rgba(255, 255, 255, 0.03), transparent 70%);
+}
+
+/* soft fade/blur overlay at the bottom of the hero to blend into the page */
+.sky-field::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 260px;
+  pointer-events: none;
+  /* reach full page background sooner so the image doesn't show through */
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--bg) 55%, var(--bg) 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 1;
+  z-index: 1;
+  transition: background-color 250ms ease, backdrop-filter 250ms ease;
+}
+.dark .sky-field::after {
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--bg) 55%, var(--bg) 100%);
+}
+
+/* ensure children sit above the overlay */
+.sky-field > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* text colors tuned for sitting directly on the sky field */

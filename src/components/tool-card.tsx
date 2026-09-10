@@ -246,7 +246,7 @@ export function ToolCard() {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
       className={cn(
-        "relative z-10 -mt-16 rounded-xl border border-hairline bg-card p-4 card-shadow md:-mt-20 md:p-5",
+        "relative z-10 -mt-16 rounded-xs border border-hairline bg-card p-4 card-shadow md:-mt-50 md:p-5",
         "transition-transform duration-150",
         isIdle && "md:hover:-translate-y-0.5"
       )}
