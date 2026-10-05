@@ -94,13 +94,6 @@ export function ToolCard() {
   const abortRef = useRef<AbortController | null>(null);
   const reduced = useReducedMotion();
 
-  const isIdle = card.state === "idle";
-  const isDesktop = useRef(false);
-  useEffect(() => {
-    isDesktop.current = window.matchMedia("(hover: hover)").matches;
-    if (isDesktop.current) inputRef.current?.focus();
-  }, []);
-
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
@@ -120,7 +113,7 @@ export function ToolCard() {
         return;
       }
       dispatch({ type: "ANALYZE_OK", data: json as AnalyzeResponse });
-    } catch (e) {
+    } catch {
       dispatch({ type: "ANALYZE_FAIL", code: "network", platform: platformOf(url) });
     }
   }, []);
@@ -136,7 +129,7 @@ export function ToolCard() {
 
       try {
         const res = await fetch(
-          `/api/download?url=${encodeURIComponent(data.sourceUrl)}&formatId=${encodeURIComponent(fmt.id)}&index=${itemIdx}`,
+          `/api/download?url=${encodeURIComponent(data.sourceUrl)}&formatId=${encodeURIComponent(fmt.id)}&index=${itemIdx}&filename=${encodeURIComponent(sanitizeFilename(data.title, fmt.ext))}`,
           { signal: controller.signal }
         );
         if (!res.ok || !res.body) {
@@ -167,7 +160,7 @@ export function ToolCard() {
         setProgress(received, total, (performance.now() - t0) / 1000, true);
 
         // hand the assembled blob to the browser as a saved file
-        const blob = new Blob(chunks, { type: res.headers.get("Content-Type") ?? "application/octet-stream" });
+        const blob = new Blob(chunks as unknown as BlobPart[], { type: res.headers.get("Content-Type") ?? "application/octet-stream" });
         const cd = res.headers.get("Content-Disposition") ?? "";
         const nameMatch = /filename="?([^";]+)"?/.exec(cd);
         const blobUrl = URL.createObjectURL(blob);
@@ -246,9 +239,7 @@ export function ToolCard() {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
       className={cn(
-        "relative z-10 -mt-16 rounded-xs border border-hairline bg-card p-4 card-shadow md:-mt-50 md:p-5",
-        "transition-transform duration-150",
-        isIdle && "md:hover:-translate-y-0.5"
+        "relative z-10 -mt-28 rounded-2xl border border-hairline bg-card p-4 card-shadow md:-mt-40 md:p-5"
       )}
       aria-label="Media downloader"
     >
@@ -326,12 +317,6 @@ export function ToolCard() {
               >
                 <DownloadIcon /> Download
               </button>
-              <IconAction label="Save thumbnail" onClick={() => void 0}>
-                <ImageIcon />
-              </IconAction>
-              <IconAction label="Copy direct link" onClick={() => void 0}>
-                <LinkIcon />
-              </IconAction>
             </div>
             <ResetLink onClick={() => reset(dispatch, inputRef)}>Analyze another</ResetLink>
           </motion.div>
@@ -390,10 +375,20 @@ function reset(dispatch: React.Dispatch<Action>, inputRef: React.RefObject<HTMLI
   requestAnimationFrame(() => inputRef.current?.select());
 }
 
+/* mirrors sanitizeFilename() in src/lib/ytdlp.ts so the name shown in the
+   "Saved" state matches the Content-Disposition the server sends */
+function sanitizeFilename(title: string, ext: string): string {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+  return `${base || "mediadrop"}.${ext}`;
+}
+
 function doneFilename(card: CardState, fmt: { ext: string } | null) {
   if (card.state !== "done" || !fmt) return "";
-  const base = card.data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
-  return `${base}.${fmt.ext}`;
+  return sanitizeFilename(card.data.title, fmt.ext);
 }
 
 function IdleHint() {
@@ -410,20 +405,6 @@ function DownloadIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
-    </svg>
-  );
-}
-function ImageIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
-    </svg>
-  );
-}
-function LinkIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
     </svg>
   );
 }
@@ -569,28 +550,6 @@ function FormatList({
         </button>
       ))}
     </div>
-  );
-}
-
-function IconAction({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
-  const [ok, setOk] = useStateSafe(false);
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={() => {
-        onClick();
-        setOk(true);
-        setTimeout(() => setOk(false), 1000);
-      }}
-      className={cn(
-        "grid size-9.5 shrink-0 place-items-center rounded-lg border border-hairline text-ink-2 transition-[border-color,color,transform] duration-100 active:scale-95",
-        ok ? "border-accent text-accent" : "hover:border-ink-2 hover:text-ink"
-      )}
-    >
-      {children}
-    </button>
   );
 }
 

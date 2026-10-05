@@ -1,6 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,13 +14,20 @@ export const metadata: Metadata = {
     "Paste. Choose. Download. Grab video or audio from YouTube, Instagram, X and 1000+ other sites.",
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#a8cfef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1424" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
       <head>
         {/* apply theme before paint — no flash of wrong theme */}
         <script
@@ -30,9 +36,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }

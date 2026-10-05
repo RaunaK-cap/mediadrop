@@ -2,28 +2,27 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { ToolCard } from "@/components/tool-card";
+import { HeroShader } from "@/components/hero-shader";
 import { useTheme } from "@/components/theme-provider";
 
 export default function Home() {
   const reduced = useReducedMotion();
   const { theme, toggle } = useTheme();
+  const ease = [0.16, 1, 0.3, 1] as const;
 
   return (
-    <main className="min-h-dvh ">
-      {/* ---------- nav + hero sit directly on the sky field ---------- */}
-      <div
-        className={
-          "sky-field px-5 pb-24 md:pb-70 " +
-            "bg-[url('/BACKGROUND.png')] bg-no-repeat bg-cover " +
-          "bg-[position:center_50%]"
-        }
-      >
-        <nav className="mx-auto flex h-14 max-w-[640px] items-center justify-between ">
+    <main className="min-h-dvh">
+      {/* ---------- hero: the cloud shader paints everything above the fold ---------- */}
+      <section className="relative flex min-h-[92svh] flex-col overflow-hidden">
+        <HeroShader />
+        <div className="hero-fade" aria-hidden />
+
+        <nav className="relative z-10 mx-auto flex w-full max-w-[640px] items-center justify-between px-5 pt-5">
           <motion.div
-            initial={{ opacity: 0, ...(reduced ? {} : { y: 12 }) }}
+            initial={{ opacity: 0, ...(reduced ? {} : { y: 10 }) }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-1.75 text-sm font-semibold tracking-tight "
+            transition={{ duration: 0.48, ease }}
+            className="sky-ink flex items-center gap-1.75 text-sm font-semibold tracking-tight"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
@@ -36,53 +35,47 @@ export default function Home() {
             </svg>
             mediadrop
           </motion.div>
-          <motion.div
+          <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.48 }}
-            className="flex items-center gap-3.5"
+            onClick={toggle}
+            aria-label="Toggle theme"
+            className="sky-ink grid size-8 place-items-center rounded-lg transition-colors duration-100 hover:bg-white/35 dark:hover:bg-white/10"
           >
-            
-            <button
-              onClick={toggle}
-              aria-label="Toggle theme"
-              className="grid size-8 place-items-center rounded-lg sky-ink transition-colors duration-100 hover:bg-white/35 dark:hover:bg-white/10"
-            >
-              {theme === "dark" ? (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
-                </svg>
-              ) : (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-                </svg>
-              )}
-            </button>
-          </motion.div>
+            {theme === "dark" ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              </svg>
+            )}
+          </motion.button>
         </nav>
 
-        <div className="mx-auto max-w-[640px] px-2 pt-11 pb-2 text-center">
-          
+        <div className="relative z-10 mx-auto flex w-full max-w-[640px] flex-1 flex-col items-center justify-center px-5 pb-44 text-center md:pb-56">
           <motion.h1
             initial={{ opacity: 0, ...(reduced ? {} : { y: 12 }) }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
-            className="mt-3.5 text-[30px] font-semibold leading-[1.1] tracking-[-0.03em] sky-ink md:text-[44px]"
+            transition={{ duration: 0.55, ease, delay: 0.06 }}
+            className="sky-ink text-[34px] font-semibold leading-[1.05] tracking-[-0.035em] md:text-[52px]"
           >
             Paste. Choose. Download.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, ...(reduced ? {} : { y: 12 }) }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
-            className="mx-auto mt-3 max-w-[44ch] text-sm leading-relaxed sky-ink-2"
+            transition={{ duration: 0.55, ease, delay: 0.12 }}
+            className="sky-ink-2 mx-auto mt-4 max-w-[42ch] text-[15px] leading-relaxed"
           >
-            Grab video or audio from YouTube, Instagram, X and 1000+ other sites. No ads, no redirects, no
-            waiting rooms.
+            Grab video or audio from YouTube, Instagram, X and 1000+ other sites.
+            No ads, no redirects, no waiting rooms.
           </motion.p>
         </div>
-      </div>
+      </section>
 
       {/* ---------- the tool card, floating over the sky's edge ---------- */}
       <div className="mx-auto max-w-[640px] px-5">
@@ -90,8 +83,8 @@ export default function Home() {
       </div>
 
       {/* ---------- feature strip ---------- */}
-      <div className="mx-auto max-w-[640px] px-5  pt-14">
-        <div className="grid grid-cols-2 gap-7 gap-y-7 md:grid-cols-4">
+      <div className="mx-auto max-w-[640px] px-5 pt-16">
+        <div className="grid grid-cols-2 gap-x-7 gap-y-8 md:grid-cols-4">
           {[
             ["No ads, ever", "The page has nothing to sell you."],
             ["Real progress", "MB, speed and ETA — not a spinner."],
@@ -115,13 +108,13 @@ export default function Home() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.32, delay: 0.28 }}
-          className="pt-12 text-center text-xs leading-relaxed text-ink-3"
+          className="tnums pt-14 text-center text-xs leading-relaxed text-ink-3"
         >
-          Works with YouTube · Instagram · X · TikTok · Reddit · Vimeo · and 1000+ more
+          YouTube · Instagram · X · TikTok · Reddit · Vimeo · 1000+ more
         </motion.p>
       </div>
 
-      <footer className="px-5 pb-[calc(28px+env(safe-area-inset-bottom))] text-center text-[11px] text-ink-3">
+      <footer className="px-5 pb-[calc(28px+env(safe-area-inset-bottom))] pt-14 text-center text-[11px] leading-relaxed text-ink-3">
         mediadrop — a personal-use tool. Please respect creators and platform terms. Nothing is stored.
       </footer>
     </main>

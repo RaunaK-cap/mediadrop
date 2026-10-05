@@ -7,7 +7,9 @@ import { ytdlp, classifyError, mapInfoToResponse, safeUrl } from "@/lib/ytdlp";
  * Returns: AnalyzeResponse — media info + every available format.
  *
  * Uses ytdlp-nodejs to extract metadata. Playlists and carousel posts
- * are limited to the first 12 items to keep analysis fast.
+ * are limited to the first 12 items to keep analysis fast. The builder
+ * form is used so a timed-out extraction can be killed instead of
+ * leaking a running yt-dlp process.
  */
 
 const ANALYZE_TIMEOUT_MS = 30_000;
@@ -21,15 +23,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unknown_url" }, { status: 400 });
   }
 
+  const builder = ytdlp.exec(url, {
+    dumpSingleJson: true,
+    noWarnings: true,
+    playlistEnd: MAX_PLAYLIST_ITEMS,
+  });
+
   try {
     const result = await Promise.race([
-      ytdlp.execAsync(url, {
-        dumpSingleJson: true,
-        noWarnings: true,
-        playlistEnd: MAX_PLAYLIST_ITEMS,
-      }),
+      builder.exec(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Analysis timed out")), ANALYZE_TIMEOUT_MS)
+        setTimeout(() => {
+          builder.kill();
+          reject(new Error("Analysis timed out"));
+        }, ANALYZE_TIMEOUT_MS)
       ),
     ]);
 

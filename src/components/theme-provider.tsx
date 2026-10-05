@@ -1,32 +1,41 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
-const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
-  theme: "light",
-  toggle: () => {},
-});
+/* The single source of truth is the `dark` class on <html>: the inline
+   pre-paint script in layout.tsx sets it before first paint, and every
+   consumer subscribes to it. Changing the class notifies subscribers. */
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // safe default; the inline <head> script already applied the class pre-paint
-  const [theme, setTheme] = useState<Theme>("light");
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
-  }, []);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
-  const toggle = () => {
+function getSnapshot(): Theme {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function getServerSnapshot(): Theme {
+  return "light";
+}
+
+export function useTheme() {
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const toggle = useCallback(() => {
     const next: Theme = document.documentElement.classList.contains("dark") ? "light" : "dark";
     document.documentElement.classList.toggle("dark", next === "dark");
     try {
       localStorage.setItem("md-theme", next);
     } catch {}
-    setTheme(next);
-  };
+    for (const listener of listeners) listener();
+  }, []);
 
-  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
+  return { theme, toggle };
 }
-
-export const useTheme = () => useContext(ThemeContext);

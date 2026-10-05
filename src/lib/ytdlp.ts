@@ -275,65 +275,83 @@ export function mapInfoToResponse(
   };
 }
 
+/**
+ * Download spec for a format id. yt-dlp post-processing (mp3 extraction,
+ * mp4 merging) only works on real files — it is silently skipped when
+ * streaming to stdout — so downloads run to a temp file with these raw
+ * yt-dlp options and are then streamed to the client.
+ */
 export interface FormatSpec {
-  filter: "mergevideo" | "audioonly";
-  quality: string | number;
-  type: string;
   ext: string;
-  label: string;
+  /** Raw yt-dlp -f selector */
+  format: string;
+  mergeOutputFormat?: string;
+  extractAudio?: boolean;
+  audioFormat?: string;
+  audioQuality?: string;
 }
 
 export function parseFormatId(id: string): FormatSpec | null {
   if (id === "mp3") {
-    return { filter: "audioonly", quality: 5, type: "mp3", ext: "mp3", label: "Audio only — MP3" };
+    return {
+      ext: "mp3",
+      format: "ba/b",
+      extractAudio: true,
+      audioFormat: "mp3",
+      audioQuality: "5",
+    };
   }
   if (id === "image") {
-    return { filter: "mergevideo", quality: "highest", type: "mp4", ext: "jpg", label: "Image — JPG" };
+    return { ext: "jpg", format: "b" };
   }
 
   const match = /^mp4-(\d+)$/.exec(id);
   if (match) {
     const height = match[1];
     return {
-      filter: "mergevideo",
-      quality: `${height}p`,
-      type: "mp4",
       ext: "mp4",
-      label: `${height}p — MP4`,
+      format: `bv*[height<=${height}]+ba/b[height<=${height}]/b`,
+      mergeOutputFormat: "mp4",
     };
   }
 
   return null;
 }
 
-export function sanitizeFilename(name: string, ext: string): string {
-  const base = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
-  return `${base || "mediadrop"}.${ext}`;
-}
-
+/**
+ * Bridge a Node readable stream to a Web ReadableStream with real
+ * backpressure: the Node stream is paused whenever the consumer (the
+ * browser download) isn't reading, so multi-GB media never buffers up
+ * in server memory. The stream must support pause/resume/destroy.
+ */
 export function nodeStreamToWebStream(
-  nodeStream: NodeJS.ReadableStream,
+  nodeStream: NodeJS.ReadableStream & {
+    pause(): void;
+    resume(): void;
+    destroy(error?: Error): void;
+  },
   onError?: (err: Error) => void
 ): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     start(controller) {
+      nodeStream.pause();
       nodeStream.on("data", (chunk: Buffer | string) => {
         controller.enqueue(typeof chunk === "string" ? Buffer.from(chunk) : new Uint8Array(chunk));
+        if (controller.desiredSize === null || controller.desiredSize <= 0) {
+          nodeStream.pause();
+        }
       });
       nodeStream.on("end", () => controller.close());
-      nodeStream.on("error", (err) => {
+      nodeStream.on("error", (err: Error) => {
         onError?.(err);
         controller.error(err);
       });
     },
+    pull() {
+      nodeStream.resume();
+    },
     cancel() {
-      if ("destroy" in nodeStream && typeof nodeStream.destroy === "function") {
-        nodeStream.destroy();
-      }
+      nodeStream.destroy();
     },
   });
 }
