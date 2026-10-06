@@ -289,7 +289,33 @@ export interface FormatSpec {
   extractAudio?: boolean;
   audioFormat?: string;
   audioQuality?: string;
+  /** Raw yt-dlp -S sort order (prefers containers that mux without re-encode) */
+  formatSort?: string[];
 }
+
+/**
+ * Shared yt-dlp throughput flags for downloads.
+ *
+ * - concurrentFragments: DASH/HLS is hundreds of tiny fragments fetched
+ *   one-by-one by default; 8 parallel connections is the single biggest
+ *   speedup on YouTube-like sites.
+ * - httpChunkSize: splits single-file HTTP (Instagram/X/TikTok) into
+ *   chunks to bypass per-connection throttling.
+ * - bufferSize + resizeBuffer: larger pipe buffers = higher throughput.
+ * - noKeepFragments: skip keeping .part fragments on disk (less I/O).
+ * - retries/fragmentRetries/socketTimeout: fail fast on stalled
+ *   fragments instead of hanging the whole download.
+ */
+export const DOWNLOAD_ACCEL = {
+  concurrentFragments: 8,
+  httpChunkSize: "5M",
+  bufferSize: "16K",
+  resizeBuffer: true,
+  noKeepFragments: true,
+  retries: 10,
+  fragmentRetries: 10,
+  socketTimeout: 15,
+} as const;
 
 export function parseFormatId(id: string): FormatSpec | null {
   if (id === "mp3") {
@@ -310,8 +336,11 @@ export function parseFormatId(id: string): FormatSpec | null {
     const height = match[1];
     return {
       ext: "mp4",
-      format: `bv*[height<=${height}]+ba/b[height<=${height}]/b`,
+      // Prefer mp4/m4a (h264+aac) so the merge is a fast stream-copy
+      // instead of a re-encode; fall back to any bv+ba when needed.
+      format: `bv*[height<=${height}][ext=mp4]+ba[ext=m4a]/bv*[height<=${height}]+ba/b[height<=${height}]/b`,
       mergeOutputFormat: "mp4",
+      formatSort: ["res", "ext:mp4:m4a"],
     };
   }
 

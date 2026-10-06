@@ -10,6 +10,7 @@ import {
   parseFormatId,
   nodeStreamToWebStream,
   safeUrl,
+  DOWNLOAD_ACCEL,
 } from "@/lib/ytdlp";
 
 /**
@@ -60,10 +61,9 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: "extraction_broke" }, { status: 422 });
   }
 
-  const ffmpegOk = await ensureFfmpeg();
-  if (!ffmpegOk) {
-    return Response.json({ error: "server" }, { status: 503 });
-  }
+  // Start the (cached) ffmpeg check immediately so it overlaps the
+  // playlist flat-dump below instead of running sequentially before it.
+  const ffmpegPromise = ensureFfmpeg();
 
   try {
     let itemUrl = url;
@@ -76,6 +76,9 @@ export async function GET(req: NextRequest) {
         flatPlaylist: true,
         playlistItems: String(index + 1),
         noWarnings: true,
+        skipDownload: true,
+        noCheckFormats: true,
+        socketTimeout: 10,
       });
       const info = JSON.parse(result.output) as
         | (FlatEntry & { _type?: string; entries?: FlatEntry[] })
@@ -92,18 +95,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const ffmpegOk = await ffmpegPromise;
+    if (!ffmpegOk) {
+      return Response.json({ error: "server" }, { status: 503 });
+    }
+
     const dir = await mkdtemp(join(tmpdir(), "mediadrop-"));
     try {
       const builder = ytdlp.download(itemUrl, {
         output: join(dir, "media.%(ext)s"),
         format: spec.format,
         mergeOutputFormat: spec.mergeOutputFormat,
+        formatSort: spec.formatSort,
         extractAudio: spec.extractAudio,
         audioFormat: spec.audioFormat,
         audioQuality: spec.audioQuality,
         noPlaylist: true,
         noWarnings: true,
         noProgress: true,
+        ...DOWNLOAD_ACCEL,
       });
 
       // stop the yt-dlp process if the client hangs up mid-download
@@ -129,7 +139,7 @@ export async function GET(req: NextRequest) {
       const base = requestedName.replace(/\.[a-z0-9]{2,5}$/i, "").replace(/[^a-z0-9-]/gi, "-").replace(/^-+|-+$/g, "");
       const filename = `${base || "mediadrop"}.${ext}`;
 
-      const fileStream = createReadStream(filePath);
+      const fileStream = createReadStream(filePath, { highWaterMark: 1024 * 1024 });
       // 'close' fires on normal end AND on destroy() (client abort)
       fileStream.on("close", () => {
         rm(dir, { recursive: true, force: true }).catch(() => {});

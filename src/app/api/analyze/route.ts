@@ -27,6 +27,10 @@ export async function POST(req: NextRequest) {
     dumpSingleJson: true,
     noWarnings: true,
     playlistEnd: MAX_PLAYLIST_ITEMS,
+    skipDownload: true,
+    socketTimeout: 10,
+    retries: 3,
+    extractorRetries: 2,
   });
 
   try {
